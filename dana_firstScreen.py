@@ -1,50 +1,33 @@
-import logging
+import unittest
 from appium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from appium.options.android import UiAutomator2Options
+from appium.webdriver.common.appiumby import AppiumBy
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class TestDanaApp(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        capabilities = {
+            "platformName": "Android",
+            "platformVersion": "12",  # Replace with your Android version
+            "deviceName": "adb-bd07c5d4-UdMSsc._adb-tls-connect._tcp.",  # Replace with your device name
+            "automationName": "UiAutomator2",
+            "appPackage": "id.dana",  # Replace with Dana app's package name
+            "appActivity": "id.dana.home.HomeTabActivity",  # Replace with Dana app's main activity
+        }
+        appium_server_url = 'http://localhost:4723'
+        cls.driver = webdriver.Remote(appium_server_url, 
+                                      options=UiAutomator2Options().load_capabilities(capabilities))
 
-try:
-    # Desired capabilities
-    desired_caps = {
-        "platformName": "Android",
-        "platformVersion": "10",
-        "deviceName": "emulator-5554",
-        "app": "/Users/johannessihotang/project/danaAppium/dana.apk",
-        "automationName": "UiAutomator2",
-        "appPackage": "com.danaapp",
-        "appActivity": "com.danaapp.MainActivity",
-    }
+    def test_home_activity(self):
+        # Adjust the locator to find a unique element on the home screen of the Dana app
+        el = self.driver.find_element(by=AppiumBy.XPATH, 
+                                      value='//*[@content-desc="home_activity"]')  # Replace with an actual locator for a unique home screen element
+        self.assertIsNotNone(el, "Home activity element not found")
+    
+    @classmethod
+    def tearDownClass(cls):
+        if cls.driver:
+            cls.driver.quit()
 
-    # Log desired capabilities
-    logger.info(f"Desired Capabilities: {desired_caps}")
-
-    # Initialize the driver
-    driver = webdriver.Remote("http://localhost:4723/wd/hub", desired_caps)
-    logger.info("Appium driver initialized successfully.")
-
-    # Example: Wait for an element to be visible and interact with it
-    wait = WebDriverWait(driver, 20)
-    element = wait.until(EC.visibility_of_element_located((By.ID, "com.danaapp:id/element_id")))
-    element.click()
-    logger.info("Element clicked successfully.")
-
-    # Additional test steps...
-
-except Exception as e:
-    logger.error(f"An error occurred: {e}")
-    # Optionally, you can log the full traceback for debugging purposes
-    logger.exception("Full traceback:")
-
-finally:
-    # Close the app and driver
-    try:
-        if 'driver' in locals() or 'driver' in globals():
-            driver.quit()
-            logger.info("Driver closed.")
-    except NameError as ne:
-        logger.error(f"NameError occurred: {ne}")
+if __name__ == '__main__':
+    unittest.main()
